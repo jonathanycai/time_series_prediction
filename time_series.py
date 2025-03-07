@@ -52,3 +52,33 @@ model.add(LSTM(4, input_shape=(1, look_back)))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam')
 model.fit(trainX, trainY, epochs=100, batch_size=1, verbose=2)
+
+# make predictions
+trainPredict = model.predict(trainX)
+testPredict = model.predict(testX)
+
+# invert normalization applied earlier
+trainPredict = scaler.inverse_transform(trainPredict)
+trainY = scaler.inverse_transform([trainY])
+testPredict = scaler.inverse_transform(testPredict)
+testY = scaler.inverse_transform([testY])
+
+# compute root mean squared error (RMSE)
+trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
+testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
+
+# prepare prediction for plotting (training)
+trainPredictPlot = numpy.empty_like(dataset)
+trainPredictPlot[:, :] = numpy.nan
+trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
+
+# prepare prediction for plotting (test)
+testPredictPlot = numpy.empty_like(dataset)
+testPredictPlot[:, :] = numpy.nan
+testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
+
+# plot results
+plt.plot(scaler.inverse_transform(dataset))  # Original data
+plt.plot(trainPredictPlot)  # Training predictions
+plt.plot(testPredictPlot)  # Test predictions
+plt.show()
